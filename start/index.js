@@ -1,33 +1,46 @@
 const { ApolloServer, gql } = require("apollo-server");
 
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
+
 const typeDefs = gql`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
 
   # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
+  type Post {
+    id: ID
     title: String
-    author: String
+    text: String
+    comment: String
   }
 
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
   type Query {
-    books: [Book]
+    post(id:ID): Post
+  }
+
+  type Mutation {
+    createPost(id: Int, title:String, text: String, comment:String): Post,
+    deletePost(id: ID):Post,
+    updatePost(id: Int, title:String): Post
   }
 `;
 
-const books = [
+let posts = [
     {
+      id: 1,
       title: 'The Awakening',
-      author: 'Kate Chopin',
+      text: 'Kate Chopin',
     },
     {
-      title: 'City of Glass',
-      author: 'Paul Auster',
+      id: 2,
+      title: 'The Sleeping',
+      text: 'Kate Chopin',
+    },
+    {
+      id: 3,
+      title: 'The Awakening-sleeping',
+      text: 'Kate Chopin',
     },
   ];
 
@@ -35,8 +48,32 @@ const books = [
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
     Query: {
-      books: () => books,
+      post: (_, {id}) => {
+        const Spost = posts.find(post => post.id == id);
+        return Spost;
+      },
     },
+    Mutation:{
+      deletePost: (_, {id}) => {
+        posts = posts.filter(post => post.id != id);
+        return posts;
+      },
+      createPost: (_, {id, title, text, comment}) => {
+        posts.push({id, title, text, comment});
+        console.log(title)
+        return posts[posts.length-1];
+      },
+      updatePost: (_, {id, title}) => {
+        /* posts.map(post => {
+          post.id == id,
+          post.title = title
+        }); */
+        const updated = posts.filter(post => post.id != id);
+        updated.id = id;
+        updated.title = title;
+        return updated;
+      }
+    }
   };
 
   // The ApolloServer constructor requires two parameters: your schema
