@@ -1,7 +1,18 @@
 const { ApolloServer, gql } = require("apollo-server");
+const path = require('path');
+const fs = require('fs');
+const resolvers = require('./resolvers/index');
+const PostDataSource = require('./dataSources/post.datasource');
+const mongoose = require('mongoose');
 
+mongoose.connect('mongodb://127.0.0.1:27017/graphQlTask');
 
-const typeDefs = gql`
+const schemaData = fs.readFileSync(path.join(__dirname, 'schema.graphql'), {
+  encoding: 'utf8',
+});
+
+const typeDefs = gql(schemaData);
+/* const typeDefs = gql`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
 
   # This "Book" type defines the queryable fields for every book in our data source.
@@ -24,9 +35,9 @@ const typeDefs = gql`
     deletePost(id: ID):Post,
     updatePost(id: Int, title:String): Post
   }
-`;
+`; */
 
-let posts = [
+/* let posts = [
     {
       id: 1,
       title: 'The Awakening',
@@ -42,11 +53,11 @@ let posts = [
       title: 'The Awakening-sleeping',
       text: 'Kate Chopin',
     },
-  ];
+  ]; */
 
   // Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
-const resolvers = {
+/* const resolvers = {
     Query: {
       post: (_, {id}) => {
         const Spost = posts.find(post => post.id == id);
@@ -64,23 +75,20 @@ const resolvers = {
         return posts[posts.length-1];
       },
       updatePost: (_, {id, title}) => {
-        /* posts.map(post => {
-          post.id == id,
-          post.title = title
-        }); */
         const updated = posts.filter(post => post.id != id);
         updated.id = id;
         updated.title = title;
         return updated;
       }
     }
-  };
+  }; */
 
   // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
     typeDefs,
     resolvers,
+    dataSources: () => ({ posts: new PostDataSource() }),
     csrfPrevention: true,
     cache: 'bounded',
   });
